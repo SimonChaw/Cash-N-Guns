@@ -5,10 +5,14 @@
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
+      canvas {width:800px;height:800px;margin:0 auto;}
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js"></script>
+    <script src="client/game.js"></script>
   </head>
   <body>
+  <canvas id="canvas"></canvas>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var socket = io();

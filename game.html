@@ -6,16 +6,149 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
       canvas {width:800px;height:800px;margin:0 auto;}
+      #gameBoard {width:700px;height:500px;margin:0 auto; background-color: magenta;}
+      .player{width:50px;height:50px;float:left;}
+      .loot{width:100px; height:200px; text-align: center;float:left;}
+      #messageLog{width: 100%; height:30vh; overflow-y:scroll;}
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+      #actionButtons {width:700px;margin:0 auto;clear:both;}
+      button{width:100px; height: 50px; background-color: red; color: white;}
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js"></script>
-    <script src="client/game.js"></script>
   </head>
   <body>
-  <canvas id="canvas"></canvas>
+  <form id="playerSetup" action="">
+    <label for="name">Name:</label>
+    <input type="text" id='name' name="txtName" value="" />
+    <label for="txtAge">Age:</label>
+    <input type="text" id="age" name="txtAge" value="" /><button>Enter</button>
+  </form>
+  <h1 id="message"></h1>
+  <div id="gameBoard">
+    <div id="lootContainer">
+
+    </div>
+  </div>
+  <div id="actionButtons">
+    <button id="btnClick" onclick="loadGun">Click</button>
+    <button id="btnBang" onclick="loadGun">Bang</button>
+  </div>
+  <div id="messageLog">
+    <ul id="messages"></ul>
+  </div>
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    var socket = io();
+  $( document ).ready(function() {
+      //Properties
+      var selectedTarget;
+
+      //Display functions
+      function createPlayerPiece(color, func){
+        var piece = document.createElement("div");
+        piece.style.backgroundColor = color;
+        piece.className = 'player';
+        piece.id = color;
+        piece.addEventListener('click', pickPlayer);
+        $('#lootContainer').append(piece);
+      }
+
+      function layOutLoot(cards){
+        var mobBossDesk = document.createElement("div");
+        mobBossDesk.className = "loot";
+        mobBossDesk.style.backgroundColor = "brown";
+        $('#gameBoard').append(mobBossDesk);
+        for(var i = 0; i < cards.length; i ++){//Put out cards
+          var card = document.createElement("div");
+          card.className = "loot";
+          if(cards[i].type == "diamond"){
+            card.style.backgroundColor = "lightblue";
+          }else if(cards[i].type == "painting"){
+            card.style.backgroundColor = "beige";
+          }else if(cards[i].type == "cash"){
+            card.style.backgroundColor = "lightgreen";
+          }
+          else{
+            card.style.backgroundColor = "white";
+          }
+          card.id = 'loot' + i;
+          card.addEventListener('click', pickLoot);
+          card.innerHTML = "Type:" + cards[i].type + "<br / >"
+          + "Value:" + cards[i].value;
+          $('#lootContainer').append(card);
+        }
+      }
+      //Server communications
+      var socket = io();
+      $('#playerSetup').submit(function(){
+        socket.emit('playerSetup', $('#name').val(), $('#age').val());//send in name and age so game can begin
+        $('#name').val('');
+        $('#age').val('');
+        return false;
+      });
+      socket.on('accepted', function(accepted){
+        if(accepted){
+          $('#playerSetup').hide();
+          $('#message').text("Waiting for other players!");
+        }
+      });
+      socket.on('allPlayersReady', function(){
+        $('#message').text('');
+        createPlayerPiece('red', pickPlayer);
+        createPlayerPiece('black', pickPlayer);
+        createPlayerPiece('brown', pickPlayer);
+        createPlayerPiece('orange', pickPlayer);
+        createPlayerPiece('blue', pickPlayer);
+      });
+      socket.on('updateAmmo', function(clicks, bangs){
+        $("#btnClick").text('Clicks (' + clicks + ')');
+        $("#btnBang").text('Bangs (' + bangs + ')');
+      });
+      socket.on('lootPicked', function(index){
+        $('#loot'+ index).remove();
+      });
+
+      socket.on('allPlayersPicked', function(){
+        $('.player').remove();
+        /*
+        for(var i = 0; i < players.length; i ++){
+          createPlayerPiece(players[i].color, function(e){
+            selectedTarget = e.target.id;
+          });
+        }*/
+      });
+      socket.on('playerPicked', function(piece){
+        console.log(piece);
+        $('#' + piece).hide();
+      });
+      socket.on('loot', function(cards){
+        layOutLoot(cards);
+      });
+      socket.on('message', function(message){
+        $('#messages').append($('<li>').text(message));
+      });
+
+
+      //Player Actions
+      function pickPlayer(e){
+        socket.emit('playerPicked', e.target.id);
+      }
+
+      function pickLoot(e){
+        var index = e.target.id.replace("loot", "");
+        socket.emit('lootPicked', index);
+      }
+
+      function shotPlan(){
+        socket.emit('shotPlan', selectedTarget, shot);
+      }
+
+      function inOrOut(){
+        socket.emit('inOrOut', banzai);
+      }
+  });
   </script>
   </body>
 </html>

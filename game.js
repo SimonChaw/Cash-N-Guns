@@ -3,6 +3,9 @@ function Game(){
   var lootCards = new Array();
   var round;
   var cards;
+  var numPlayers;
+  var turn;
+
   //CLASSES
   function LootCard(type, value){
     this.type = type;
@@ -86,6 +89,8 @@ function Game(){
     shuffle(lootCards);
     console.log('game started');
     round = 0;
+    numPlayers = players.length;
+    turn = 0;
     return players.rotate(oldest.age);
   }
 
@@ -99,16 +104,29 @@ function Game(){
     return cards;
   }
 
+
   exports.pickLoot = function(index, player){
     if(cards[index].picked){
       return false;
     }else{
       cards[index].picked = true;
       player.loot.push(cards[index]);
+      turn = turn + 1;
+      if(turn = numPlayers){
+        turn = 0;
+      }
       return true;
     }
   }
 
+  exports.isMyTurn = function(index){
+    console.log('index: ' + index + ' turn: ' + turn);
+    if(index == turn){
+      return true;
+    }else{
+      return false;
+    }
+  }
 }
 
 var game = new Game();

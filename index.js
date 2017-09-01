@@ -84,11 +84,24 @@ io.on('connection', function(socket){
 
 
   socket.on('lootPicked', function(index){
+    if(g.isMyTurn(getPlayerIndex(socket.player))){
       if(g.pickLoot(index, socket.player)){
         io.emit('lootPicked', index);
         io.emit('message', socket.player.name + " picked.");
       }else{
         io.emit('message', "Error: this card is picked.");
       }
+    }else{
+      socket.emit('message', 'Sorry, its not your turn to pick loot.');
+    }
   });
+
+  function getPlayerIndex(player){
+    for(var i = 0; i < players.length; i ++){
+      if(player.piece == players[i].player.piece){
+        return i;
+      }
+    }
+    console.log('Could not find player!!');
+  }
 });

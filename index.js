@@ -84,15 +84,24 @@ io.on('connection', function(socket){
 
 
   socket.on('lootPicked', function(index){
-    if(g.isMyTurn(getPlayerIndex(socket.player))){
+    var lastSearchedIndex = getPlayerIndex(socket.player);
+    if(g.isMyTurn(lastSearchedIndex)){
       if(g.pickLoot(index, socket.player)){
         io.emit('lootPicked', index);
         io.emit('message', socket.player.name + " picked.");
+        if(lastSearchedIndex + 1 == players.length){
+          players[0].emit('message', players[0].player.name + ', it is your turn to pick.');
+        }else{
+          players[lastSearchedIndex + 1].emit('message', players[lastSearchedIndex + 1].player.name + ', it is your turn to pick.');
+        }
       }else{
         io.emit('message', "Error: this card is picked.");
       }
     }else{
       socket.emit('message', 'Sorry, its not your turn to pick loot.');
+    }
+    if(! g.cardsLeft()){
+      //Start new round;
     }
   });
 

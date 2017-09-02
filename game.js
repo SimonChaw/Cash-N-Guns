@@ -5,6 +5,7 @@ function Game(){
   var cards;
   var numPlayers;
   var turn;
+  var cardsLeft;
 
   //CLASSES
   function LootCard(type, value){
@@ -91,7 +92,7 @@ function Game(){
     round = 0;
     numPlayers = players.length;
     turn = 0;
-    return players.rotate(oldest.age);
+    return players.rotate(oldest.index);
   }
 
   exports.loot = function(){
@@ -101,6 +102,7 @@ function Game(){
       cards.push(lootCards[0]);
       lootCards.shift();
     }
+    cardsLeft = 8;
     return cards;
   }
 
@@ -112,20 +114,20 @@ function Game(){
       cards[index].picked = true;
       player.loot.push(cards[index]);
       turn = turn + 1;
-      if(turn = numPlayers){
+      if(turn == numPlayers){
         turn = 0;
       }
+      cardsLeft = cardsLeft - 1;
       return true;
     }
   }
 
   exports.isMyTurn = function(index){
-    console.log('index: ' + index + ' turn: ' + turn);
-    if(index == turn){
-      return true;
-    }else{
-      return false;
-    }
+    return index == turn; // if the index of the player matches the turn number, it is the players turn
+  }
+
+  exports.cardsLeft = function(){
+    return cardsLeft == 0;
   }
 }
 

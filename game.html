@@ -31,10 +31,13 @@
     <div id="lootContainer">
 
     </div>
+    <div id="targets">
+
+    </div>
   </div>
   <div id="actionButtons">
-    <button id="btnClick" onclick="loadGun">Click</button>
-    <button id="btnBang" onclick="loadGun">Bang</button>
+    <button id="btnClick">Clicks (5)</button>
+    <button id="btnBang">Bangs (3)</button>
   </div>
   <div id="messageLog">
     <ul id="messages"></ul>
@@ -44,6 +47,10 @@
   $( document ).ready(function() {
       //Properties
       var selectedTarget;
+
+      //Prepare click functions (html5 onclick attribute seems to cause issue)
+      document.getElementById('btnClick').addEventListener('click', loadGun);
+      document.getElementById('btnBang').addEventListener('click', loadGun);
 
       //Display functions
       function createPlayerPiece(color, func){
@@ -141,14 +148,20 @@
         socket.emit('lootPicked', index);
       }
 
-      function shotPlan(){
-        socket.emit('shotPlan', selectedTarget, shot);
+      function loadGun(e){
+        if(e.target.id == 'btnClick'){
+          socket.emit('bullet', false);
+        }else{
+          socket.emit('bullet',true);
+        }
       }
 
       function inOrOut(){
         socket.emit('inOrOut', banzai);
       }
+
   });
+
   </script>
   </body>
 </html>

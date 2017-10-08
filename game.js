@@ -1,3 +1,4 @@
+"use strict";
 
 function Game(){
   var lootCards = new Array();
@@ -6,6 +7,7 @@ function Game(){
   var numPlayers;
   var turn;
   var cardsLeft;
+  var phase = '';
 
   //CLASSES
   function LootCard(type, value){
@@ -13,6 +15,19 @@ function Game(){
     this.value = value;
     this.picked = false;
     return this;
+  }
+
+  //get/set
+  exports.phase = function(){
+    return phase;
+  }
+
+  exports.setPhase = function(n){
+    phase = n;
+  }
+
+  exports.round = function(){
+    return round;
   }
 
   //FUNCTIONS
@@ -89,45 +104,47 @@ function Game(){
     }
     shuffle(lootCards);
     console.log('game started');
-    round = 0;
+    round = 8;
     numPlayers = players.length;
     turn = 0;
     return players.rotate(oldest.index);
   }
 
   exports.loot = function(){
-    round = round + 1;
     cards = [];
     for(var i = 0; i < 8; i ++){
       cards.push(lootCards[0]);
       lootCards.shift();
     }
     cardsLeft = 8;
+    phase = "load";
     return cards;
   }
 
 
   exports.pickLoot = function(index, player){
-    if(cards[index].picked){
-      return false;
-    }else{
-      cards[index].picked = true;
-      player.loot.push(cards[index]);
-      turn = turn + 1;
-      if(turn == numPlayers){
-        turn = 0;
+    if(phase == "loot")
+      if(cards[index].picked){
+        return false;
+      }else{
+        cards[index].picked = true;
+        player.loot.push(cards[index]);
+        turn = turn + 1;
+        if(turn == numPlayers){
+          turn = 0;
+        }
+        cardsLeft = cardsLeft - 1;
+        return true;
       }
-      cardsLeft = cardsLeft - 1;
-      return true;
     }
-  }
+
 
   exports.isMyTurn = function(index){
     return index == turn; // if the index of the player matches the turn number, it is the players turn
   }
 
   exports.cardsLeft = function(){
-    return cardsLeft == 0;
+    return cardsLeft > 0;
   }
 }
 

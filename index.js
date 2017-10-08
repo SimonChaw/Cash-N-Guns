@@ -1,40 +1,26 @@
+"use strict";
+
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var messages = [];
 var games = [];
 var players = [];
+var waiting;
 
 var g = require('./game');
 
 function Player(){
-  this.name = "";
-  this.age = 0;
-  this.ip;
-  this.godFather;
-  this.piece;
-  this.loot = [];
+  this.name = ""; //String
+  this.age = 0; //int
+  this.ip; //String: no use as of yet
+  this.godFather; //bool: is this character the godFather
+  this.piece;  //String: What character are they playing
+  this.bullet; //bool: is there a bullet loaded?
+  this.loot = []; //Array: Collection of loot cards for this player
+  this.clicks = 5;
+  this.bangs = 3;
   return this;
-}
-
-function startGame(){
-  if(players.length > 1 && players.length < 3){
-    players = g.start(players);
-    io.emit('allPlayersReady');
-    io.emit('message', 'Please pick your player!');
-  }
-}
-
-function startRound(){
-  //check if all players have picked characters
-  for(var i = 0; i < players.length; i ++){
-    if(players[i].player.piece == ""){
-      return;
-    }
-  }
-  io.emit('allPlayersPicked');
-  console.log("distributing cards");
-  io.emit('loot', g.loot());
 }
 
 app.get('/', function(req, res){
@@ -78,6 +64,7 @@ io.on('connection', function(socket){
       socket.player.piece = piece;
       io.emit('playerPicked', piece);//tell all the players which piece is picked.
       io.emit('message', socket.player.name + ' picked ' + piece);
+      waiting = waiting - 1;
     }
     startRound();
   });
@@ -105,6 +92,33 @@ io.on('connection', function(socket){
     }
   });
 
+    socket.on('bullet', function(bullet){
+      console.log('here');
+      if (g.phase() == 'load' && (g.round() == socket.player.bangs + socket.player.clicks)){
+        if(bullet && socket.player.bangs > 0){
+          socket.player.bangs = socket.player.bangs - 1;
+          waiting = waiting -1;
+        }else if(!bullet && socket.player.clicks > 0){
+          socket.player.clicks = socket.player.clicks - 1;
+          waiting = waiting -1;
+        }else{
+          socket.emit('message', 'Sorry you are out of ' + (bullets) ? 'bang' : 'click' + ' cards.');
+          return;
+        }
+        if(waiting == 0){
+          //proceed to next stage
+          g.setPhase('shoot');
+          socket.emit('selectTarget');
+          io.emit('message','Now, pick a target!');
+        }
+      }else{
+        socket.emit('message', (g.phase() == 'load') ? 'You have already loaded your gun' : 'It is not time to do this');
+      }
+      socket.player.bullet = bullet;
+      socket.emit('updateAmmo', socket.player.clicks, socket.player.bangs);
+    });
+  });
+
   function getPlayerIndex(player){
     for(var i = 0; i < players.length; i ++){
       if(player.piece == players[i].player.piece){
@@ -113,4 +127,24 @@ io.on('connection', function(socket){
     }
     console.log('Could not find player!!');
   }
-});
+
+  function startGame(){
+    if(players.length > 1 && players.length < 3){
+      players = g.start(players);
+      waiting = players.length;
+      io.emit('allPlayersReady');
+      io.emit('message', 'Please pick your player!');
+    }
+  }
+
+  function startRound(){
+    //check if all players have picked characters; using waiting var to avoid too many loops
+    if(waiting > 0){
+      return;
+    }else{
+      waiting = players.length;
+    }
+    io.emit('allPlayersPicked');
+    console.log("distributing cards");
+    io.emit('loot', g.loot());
+  }

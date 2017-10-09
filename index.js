@@ -20,6 +20,7 @@ function Player(){
   this.loot = []; //Array: Collection of loot cards for this player
   this.clicks = 5;
   this.bangs = 3;
+  this.target; //int: Index of the player this player is going to shoot.
   return this;
 }
 
@@ -105,18 +106,32 @@ io.on('connection', function(socket){
           socket.emit('message', 'Sorry you are out of ' + (bullets) ? 'bang' : 'click' + ' cards.');
           return;
         }
-        if(waiting == 0){
-          //proceed to next stage
-          g.setPhase('shoot');
-          socket.emit('selectTarget');
-          io.emit('message','Now, pick a target!');
-        }
       }else{
         socket.emit('message', (g.phase() == 'load') ? 'You have already loaded your gun' : 'It is not time to do this');
+        return;
       }
       socket.player.bullet = bullet;
+      socket.emit('message', 'Ca-chink! Gun loaded!');
       socket.emit('updateAmmo', socket.player.clicks, socket.player.bangs);
+      if(waiting == 0){
+        //proceed to next stage
+        waiting = players.length;
+        g.setPhase('target');
+        var targetList = [];
+        for(var i = 0; i < players.length; i ++){
+          targetList.push(players[i].player);
+        }
+        io.emit('pickTarget', targetList);
+        io.emit('message','Now, Who are you going to shoot at?');
+      }
     });
+
+    socket.on('target', function(index){
+      if(g.phase() == 'shoot' && index < players.length){
+        player.target = index;
+      }
+    });
+
   });
 
   function getPlayerIndex(player){
@@ -147,4 +162,5 @@ io.on('connection', function(socket){
     io.emit('allPlayersPicked');
     console.log("distributing cards");
     io.emit('loot', g.loot());
+    io.emit('message', 'Please choose your bullet card!');
   }

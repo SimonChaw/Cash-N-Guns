@@ -15,6 +15,7 @@
       #messages li:nth-child(odd) { background: #eee; }
       #actionButtons {width:700px;margin:0 auto;clear:both;}
       button{width:100px; height: 50px; background-color: red; color: white;}
+      #playerStage{width:700px;height:200px;margin:0 auto; background-color: grey;}
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js"></script>
@@ -35,6 +36,8 @@
 
     </div>
   </div>
+  <div id="playerStage">
+  </div>
   <div id="actionButtons">
     <button id="btnClick">Clicks (5)</button>
     <button id="btnBang">Bangs (3)</button>
@@ -47,7 +50,7 @@
   $( document ).ready(function() {
       //Properties
       var selectedTarget;
-
+      var myPiece;
       //Prepare click functions (html5 onclick attribute seems to cause issue)
       document.getElementById('btnClick').addEventListener('click', loadGun);
       document.getElementById('btnBang').addEventListener('click', loadGun);
@@ -59,7 +62,7 @@
         piece.className = 'player';
         piece.id = color;
         piece.addEventListener('click', pickPlayer);
-        $('#lootContainer').append(piece);
+        $('#playerStage').append(piece);
       }
 
       function layOutLoot(cards){
@@ -116,7 +119,6 @@
       socket.on('lootPicked', function(index){
         $('#loot'+ index).remove();
       });
-
       socket.on('allPlayersPicked', function(){
         $('.player').remove();
         /*
@@ -133,6 +135,15 @@
       socket.on('loot', function(cards){
         layOutLoot(cards);
       });
+      socket.on('pickTarget', function(players){
+        for(var i = 0; i < players.length; i ++){
+          if(players[i].piece !== myPiece){
+            createPlayerPiece(players[i].piece, function(){
+              socket.emit('target', i);
+            });
+          }
+        }
+      });
       socket.on('message', function(message){
         $('#messages').append($('<li>').text(message));
       });
@@ -140,6 +151,7 @@
 
       //Player Actions
       function pickPlayer(e){
+        myPiece = e.target.id;
         socket.emit('playerPicked', e.target.id);
       }
 
@@ -159,6 +171,7 @@
       function inOrOut(){
         socket.emit('inOrOut', banzai);
       }
+
 
   });
 

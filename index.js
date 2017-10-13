@@ -21,6 +21,8 @@ function Player(){
   this.clicks = 5;
   this.bangs = 3;
   this.target; //int: Index of the player this player is going to shoot.
+  this.health = 3; //int: Number of shots the player can take.
+  this.getsLoot; //bool: Does the player share in taking loot this round?
   return this;
 }
 
@@ -135,7 +137,6 @@ io.on('connection', function(socket){
         waiting = waiting - 1;
         socket.emit('message', 'Selected ' + players[index].player.piece + ' as your target.');
       }
-      console.log(waiting);
       if(waiting == 0){
         waiting = players.length;
         g.setPhase('shoot');
@@ -144,12 +145,22 @@ io.on('connection', function(socket){
         for(var i = 0; i < players.length; i ++){
           players[i].emit('enemy', players[players[i].player.target].player.piece);
         }
+        io.emit('message', "Are you in or are you out?");
       }
     });
 
     socket.on('bonzai', function(bonzai){
       if(g.phase() == 'shoot'){
         socket.player.bonzai = bonzai;
+        socket.emit('message', 'You are ' + (bonzai ? 'staying in, you will share in the loot if you are not shot.' : 'cowarding out. Any one shooting at you will miss, but you will not share in the loot'));
+        waiting = waiting - 1;
+      }
+      if(waiting == 0){
+        waiting = players.length;
+        var messages = g.shootOut(players);
+        for(var i = 0;i < messages.length;i++){
+          io.emit('message', messages[i]);
+        }
       }
     });
   });

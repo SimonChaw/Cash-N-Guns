@@ -4,7 +4,7 @@ function Game(){
   var lootCards = new Array();
   var round;
   var cards;
-  var numPlayers;
+  var alivePlayers;
   var turn;
   var cardsLeft;
   var phase = '';
@@ -56,8 +56,6 @@ function Game(){
       //choose godFather and setup clicks and bangs
       oldest.index = ((oldest.age < players[i].player.age) ? i : oldest.index); //Decide who the godFather will be based on the ages of all players. Oldest player will be godFather
       oldest.age = players[oldest.index].player.age;
-      players[i].clicks = 5;
-      players[i].bangs = 3;
     }
     players[oldest.index].player.godFather = true;
     //create cards
@@ -105,7 +103,7 @@ function Game(){
     shuffle(lootCards);
     console.log('game started');
     round = 8;
-    numPlayers = players.length;
+    alivePlayers = players.length;
     turn = 0;
     return players.rotate(oldest.index);
   }
@@ -130,7 +128,7 @@ function Game(){
         cards[index].picked = true;
         player.loot.push(cards[index]);
         turn = turn + 1;
-        if(turn == numPlayers){
+        if(turn == alivePlayers){
           turn = 0;
         }
         cardsLeft = cardsLeft - 1;
@@ -146,6 +144,38 @@ function Game(){
   exports.cardsLeft = function(){
     return cardsLeft > 0;
   }
+
+  exports.shootOut = function(players){
+    var messages = [];
+    for(var i = 0; i < players.length; i ++){
+      var player = players[i].player;
+      var target = players[players[i].player.target].player;//makes it easier to read
+      if(player.bonzai && target.bonzai){//is player && player target is staying in shoot out?
+        if(player.bullet){//did the player use a bang this round?
+          target.health = target.health - 1;//injur target
+          messages.push(player.name + ' shot and injured ' + target.name);
+          if(target.health == 0){
+            //player dies
+            alivePlayers = alivePlayers - 1;
+            if(alivePlayers == 0){
+              //gameOver
+            }
+          }
+          target.getsLoot = false;//target does not get to share in loot
+        }else{
+          messages.push(player.name + ' shot ' + target.name + ", but it was just a blank!");
+          target.getsLoot = true;//target gets to share in loot
+        }
+      }else if(player.bonzai && !target.bonzai){//is the player in but their target out?
+          messages.push(player.name + ' tried to shoot at ' + target.name + ', but ' + target.name + ' hid themselves!' );
+      }
+      //store changes to original player model
+      players[i].player = player;
+      players[players[i].player.target].player = target;
+    }
+    return messages;
+  }
+
 }
 
 var game = new Game();

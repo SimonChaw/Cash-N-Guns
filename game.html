@@ -16,6 +16,8 @@
       #actionButtons {width:700px;margin:0 auto;clear:both;}
       button{width:100px; height: 50px; background-color: red; color: white;}
       #playerStage{width:700px;height:200px;margin:0 auto; background-color: grey;}
+      #shootButtons{width:100%;height:100px;display:none;}
+      .wrapper{margin:0 auto; width:30%;}
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js"></script>
@@ -30,13 +32,19 @@
   <h1 id="message"></h1>
   <div id="gameBoard">
     <div id="lootContainer">
-
+      <div id="shootButtons">
+        <div class='wrapper'>
+          <button id="btnBonzai">Bonzai!</button>
+          <button id="btnCoward">Coward</button>
+        </div>
+      </div>
     </div>
     <div id="targets">
 
     </div>
   </div>
   <div id="playerStage">
+    <h3 id='targetLabel' style="display:none;">The following players have targeted you:</h3>
   </div>
   <div id="actionButtons">
     <button id="btnClick">Clicks (5)</button>
@@ -56,12 +64,12 @@
       document.getElementById('btnBang').addEventListener('click', loadGun);
 
       //Display functions
-      function createPlayerPiece(color, func){
+      function createPlayerPiece(color, func, id){
         var piece = document.createElement("div");
         piece.style.backgroundColor = color;
         piece.className = 'player';
-        piece.id = color;
-        piece.addEventListener('click', pickPlayer);
+        piece.id = id ? id : color;
+        piece.addEventListener('click', func);
         $('#playerStage').append(piece);
       }
 
@@ -121,16 +129,10 @@
       });
       socket.on('allPlayersPicked', function(){
         $('.player').remove();
-        /*
-        for(var i = 0; i < players.length; i ++){
-          createPlayerPiece(players[i].color, function(e){
-            selectedTarget = e.target.id;
-          });
-        }*/
       });
       socket.on('playerPicked', function(piece){
         console.log(piece);
-        $('#' + piece).hide();
+        $('#' + piece).remove();
       });
       socket.on('loot', function(cards){
         layOutLoot(cards);
@@ -138,11 +140,16 @@
       socket.on('pickTarget', function(players){
         for(var i = 0; i < players.length; i ++){
           if(players[i].piece !== myPiece){
-            createPlayerPiece(players[i].piece, function(){
-              socket.emit('target', i);
-            });
+            createPlayerPiece(players[i].piece , pickTarget, 'player' + i);
           }
         }
+      });
+      socket.on('inOrOut', function(){
+        $('.player').remove();
+        $('#targetLabel').show();
+      });
+      socket.on('enemy', function(enemy){
+        createPlayerPiece(enemy, null);
       });
       socket.on('message', function(message){
         $('#messages').append($('<li>').text(message));
@@ -161,17 +168,18 @@
       }
 
       function loadGun(e){
-        if(e.target.id == 'btnClick'){
-          socket.emit('bullet', false);
-        }else{
-          socket.emit('bullet',true);
-        }
+        socket.emit('bullet', e.target.id == 'btnBang');
       }
 
-      function inOrOut(){
-        socket.emit('inOrOut', banzai);
+      function pickTarget(e){
+        var target = e.target.id.replace('player', '');
+        console.log(target);
+        socket.emit('target', target);
       }
 
+      function inOrOut(e){
+        socket.emit('bonzai', e.target.id == 'btnBonzai');
+      }
 
   });
 

@@ -83,7 +83,11 @@ io.on('connection', function(socket){
           players[lastSearchedIndex + 1].emit('message', players[lastSearchedIndex + 1].player.name + ', it is your turn to pick.');
         }
       }else{
-        io.emit('message', "Error: this card is picked.");
+        if(g.phase() == 'loot'){
+          socket.emit('message', "It's not time to pick loot yet!");
+        }else{
+          socket.emit('message', "Error: this card is picked.");
+        }
       }
     }else{
       socket.emit('message', 'Sorry, its not your turn to pick loot.');
@@ -94,7 +98,6 @@ io.on('connection', function(socket){
   });
 
     socket.on('bullet', function(bullet){
-      console.log('here');
       if (g.phase() == 'load' && (g.round() == socket.player.bangs + socket.player.clicks)){
         if(bullet && socket.player.bangs > 0){
           socket.player.bangs = socket.player.bangs - 1;
@@ -127,11 +130,28 @@ io.on('connection', function(socket){
     });
 
     socket.on('target', function(index){
-      if(g.phase() == 'shoot' && index < players.length){
-        player.target = index;
+      if(g.phase() == 'target' && index < players.length){
+        socket.player.target = index;
+        waiting = waiting - 1;
+        socket.emit('message', 'Selected ' + players[index].player.piece + ' as your target.');
+      }
+      console.log(waiting);
+      if(waiting == 0){
+        waiting = players.length;
+        g.setPhase('shoot');
+        io.emit('inOrOut');
+        //show all players who are targeting them
+        for(var i = 0; i < players.length; i ++){
+          players[i].emit('enemy', players[players[i].player.target].player.piece);
+        }
       }
     });
 
+    socket.on('bonzai', function(bonzai){
+      if(g.phase() == 'shoot'){
+        socket.player.bonzai = bonzai;
+      }
+    });
   });
 
   function getPlayerIndex(player){

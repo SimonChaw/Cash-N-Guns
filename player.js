@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function {
+module.exports = function() {
   this.name = "";  // String: name
   this.age = 0;    // int: age
   this.ip;         // String: no use as of yet

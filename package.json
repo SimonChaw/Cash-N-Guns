@@ -2,6 +2,7 @@
   "name": "Cash-N-Guns",
   "version": "0.0.1",
   "description": "Cash N' Guns clone, for the browser.",
+  "start": "node server.js",
   "dependencies": {
     "express": "^4.16.2",
     "socket.io": "^1.5.0"

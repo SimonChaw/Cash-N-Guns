@@ -1,6 +1,6 @@
 "use strict";
 
-function Game(){
+module.exports = function() {
   var lootCards = new Array();
   var round;
   var cards;
@@ -178,5 +178,3 @@ function Game(){
 
 }
 
-var game = new Game();
-exports.game = game;

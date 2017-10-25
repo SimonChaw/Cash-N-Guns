@@ -5,7 +5,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var g = require('./game');
+var g = require('./game')();
 var Player = require('./player');
 
 var messages = [];

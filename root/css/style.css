@@ -1,0 +1,59 @@
+* {
+	margin: 0; padding: 0; box-sizing: border-box;
+}
+
+body {
+	font: 13px Helvetica, Arial;
+}
+
+canvas {
+	width:800px;height:800px;margin:0 auto;
+}
+
+#gameBoard {
+	width:700px;height:500px;margin:0 auto; background-color: magenta;
+}
+
+.player {
+	width:50px;height:50px;float:left;
+}
+
+.loot {
+	width:100px; height:200px; text-align: center;float:left;
+}
+
+#messageLog{
+	width: 100%; height:30vh; overflow-y:scroll;
+}
+
+#messages {
+	list-style-type: none; margin: 0; padding: 0;
+}
+
+#messages li {
+	padding: 5px 10px;
+}
+
+#messages li:nth-child(odd) {
+	background: #eee;
+}
+
+#actionButtons {
+	width:700px;margin:0 auto;clear:both;
+}
+
+button{
+	width:100px; height: 50px; background-color: red; color: white;
+}
+
+#playerStage{
+	width:700px;height:200px;margin:0 auto; background-color: grey;
+}
+
+#shootButtons{
+	width:100%;height:100px;display:none;
+}
+
+.wrapper{
+	margin:0 auto; width:30%;
+}

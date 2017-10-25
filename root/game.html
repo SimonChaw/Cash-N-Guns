@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Cash N Guns</title>
+		<link rel="stylesheet" type="text/css" href="theme.css">
+
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.6/fabric.min.js"></script>
+	</head>
+	<body>
+		<form id="playerSetup" action="">
+			<label for="name">Name:</label>
+			<input type="text" id='name' name="txtName" value="" />
+			<label for="txtAge">Age:</label>
+			<input type="text" id="age" name="txtAge" value="" /><button>Enter</button>
+		</form>
+
+		<h1 id="message"></h1>
+
+		<div id="gameBoard">
+			<div id="lootContainer">
+				<div id="shootButtons">
+					<div class='wrapper'>
+						<button id="btnBonzai">Bonzai!</button>
+						<button id="btnCoward">Coward</button>
+					</div>
+				</div>
+			</div>
+			<div id="targets">
+			</div>
+		</div>
+
+		<div id="playerStage">
+			<h3 id='targetLabel' style="display:none;">The following players have targeted you:</h3>
+		</div>
+
+		<div id="actionButtons">
+			<button id="btnClick">Clicks (5)</button>
+			<button id="btnBang">Bangs (3)</button>
+		</div>
+
+		<div id="messageLog">
+			<ul id="messages"></ul>
+		</div>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/js/cliGame.js"></script>
+	</body>
+</html>
